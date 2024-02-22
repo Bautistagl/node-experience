@@ -1,5 +1,5 @@
 import webPush from 'web-push';
-import Base from '../../../Shared/Domain/Entities/Base';
+import { Base } from '@digichanges/shared-experience';
 import TypeEnum from '../Enum/TypeEnum';
 
 class TypeNotification extends Base
@@ -34,11 +34,6 @@ class TypeNotification extends Base
     getSubscription()
     {
         return this.subscription;
-    }
-
-    getUrl()
-    {
-        return this.url;
     }
 }
 

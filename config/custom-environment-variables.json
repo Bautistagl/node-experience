@@ -1,36 +1,22 @@
 {
   "env": "NODE_ENV",
-  "nodePath": "NODE_PATH",
-  "serverPort": "SERVER_PORT",
-  "setCookieSecure": "SET_COOKIE_SECURE",
-  "setCookieSameSite": "SET_COOKIE_SAME_SITE",
-  "auth": {
-      "authorization": "AUTHORIZATION"
-  },
   "app": {
-    "default": "APP_DEFAULT"
+    "default": "APP_DEFAULT",
+    "path": "APP_PATH",
+    "serverPort": "APP_PORT",
+    "setAppProxy": "APP_SET_APP_PROXY",
+    "setCookieSecure": "APP_SET_COOKIE_SECURE",
+    "setCookieSameSite": "APP_SET_COOKIE_SAME_SITE"
+  },
+  "auth": {
+      "apiKey": "AUTH_API_KEY",
+      "host": "AUTH_HOST",
+      "secret": "AUTH_SECRET",
+      "authorization": "AUTH_AUTHORIZATION"
   },
   "dbConfig": {
-    "TypeORM": {
-      "host": "DB_HOST",
-      "port": "DB_PORT",
-      "username": "DB_USER",
-      "password": "DB_PASSWORD",
-      "synchronize": "DB_SYNCHRONIZE",
-      "database": "DB_DATABASE",
-      "type": "DB_TYPE"
-    },
     "Mongoose": {
-      "host": "DB_HOST",
-      "port": "DB_PORT",
-      "username": "DB_USER",
-      "password": "DB_PASSWORD",
-      "database": "DB_DATABASE",
-      "driver": "DB_DRIVER",
-      "ssl": "SSL",
-      "sslValidate": "SSL_VALIDATE",
-      "sslCA": "SSL_CA",
-      "replicaSet": "REPLICA_SET"
+      "uri": "DB_URI"
     },
     "MikroORM": {
       "host": "DB_HOST",
@@ -46,8 +32,17 @@
     "redis": {
       "port": "CACHE_PORT",
       "host": "CACHE_HOST",
+      "user": "CACHE_USER",
       "password": "CACHE_PASSWORD"
-    }
+    },
+    "enable": "CACHE_ENABLE"
+  },
+  "messageBroker": {
+    "protocol": "MESSAGE_BROKER_PROTOCOL",
+    "hostname": "MESSAGE_BROKER_HOST",
+    "port": "MESSAGE_BROKER_PORT",
+    "username": "MESSAGE_BROKER_USER",
+    "password": "MESSAGE_BROKER_PASSWORD"
   },
   "filesystem": {
     "minio":  {
@@ -61,7 +56,6 @@
       "rootPath": "MINIO_ROOT_PATH",
       "region": "MINIO_REGION"
     },
-    "local": "",
     "default": "FILESYSTEM_DEFAULT"
   },
   "jwt": {
@@ -75,6 +69,7 @@
     "port": "SMTP_PORT",
     "username": "SMTP_USERNAME",
     "password": "SMTP_PASSWORD",
+    "secure": "SMTP_SECURE_SSL",
     "senderName": "SMTP_SENDER_NAME",
     "senderEmailDefault": "SMTP_SENDER_EMAIL_DEFAULT"
   },

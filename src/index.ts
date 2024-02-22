@@ -1,69 +1,83 @@
-import 'reflect-metadata';
-import './inversify.config';
-import './register';
+import dotenv from 'dotenv';
+dotenv.config();
+
+import { EventHandler, IApp } from '@digichanges/shared-experience';
+
+import DependencyInjector from './Shared/DI/DependencyInjector';
+import { FACTORIES, REPOSITORIES } from './Shared/DI/Injects';
 
 import MainConfig from './Config/MainConfig';
-import DatabaseFactory from './Shared/Factories/DatabaseFactory';
+import DatabaseFactory from './Main/Infrastructure/Factories/DatabaseFactory';
 
-import EventHandler from './Shared/Infrastructure/Events/EventHandler';
-import CacheFactory from './Shared/Factories/CacheFactory';
-import ICacheRepository from './Shared/Infrastructure/Repositories/ICacheRepository';
-
-import CronFactory from './Shared/Factories/CronFactory';
-import IApp from './Shared/Application/Http/IApp';
-import AppFactory from './Shared/Factories/AppFactory';
-import ICreateConnection from './Shared/Infrastructure/Database/ICreateConnection';
-import Logger from './Shared/Application/Logger/Logger';
+import CronFactory from './Main/Infrastructure/Factories/CronFactory';
+import AppBootstrapFactory from './Main/Presentation/Factories/AppBootstrapFactory';
+import ICreateConnection from './Main/Infrastructure/Database/ICreateConnection';
+import Logger from './Shared/Helpers/Logger';
+import closedApplication from './closed';
+import SendMessageEvent from './Notification/Domain/Events/SendMessageEvent';
+import EmailEvent from './Auth/Infrastructure/Events/EmailEvent';
+import ICacheDataAccess from './Main/Infrastructure/Repositories/ICacheDataAccess';
+import { IMessageBroker } from './Shared/Infrastructure/IMessageBroker';
 
 void (async() =>
 {
-    const config = MainConfig.getInstance().getConfig();
-    const app: IApp = AppFactory.create(config.app.default);
-
-    const databaseFactory = new DatabaseFactory();
-    const createConnection: ICreateConnection = databaseFactory.create();
-
-    const cache: ICacheRepository = CacheFactory.createRedisCache(config.cache.redis);
-    const eventHandler = EventHandler.getInstance();
-
     try
     {
+        const config = MainConfig.getInstance().getConfig();
+
+        // Init Application
+        const appBootstrap = AppBootstrapFactory.create(config.app.default);
+
+        const app: IApp = await appBootstrap({
+            serverPort: config.app.serverPort,
+            proxy: config.app.setAppProxy,
+            env: config.env,
+            dbConfigDefault: config.dbConfig.default
+        });
+
+        await app.listen();
+
+        // Create DB connection
+        const databaseFactory = DependencyInjector.inject<DatabaseFactory>(FACTORIES.IDatabaseFactory);
+        const createConnection: ICreateConnection = databaseFactory.create();
         await createConnection.initConfig();
         await createConnection.create();
 
-        await cache.cleanAll();
+        // Create Cache connection
+        let cache: ICacheDataAccess;
 
-        await eventHandler.setListeners();
+        if (config.cache.enable)
+        {
+            cache = DependencyInjector.inject<ICacheDataAccess>(REPOSITORIES.ICacheDataAccess);
+            await cache.cleanAll();
+        }
 
+        // Set EventHandler and all events
+        const eventHandler = EventHandler.getInstance();
+        eventHandler.setEvent(new EmailEvent());
+        eventHandler.setEvent(new SendMessageEvent());
+
+        // Create cron
         const cronFactory = new CronFactory();
         cronFactory.start();
 
-        app.initConfig({
-            serverPort: config.serverPort
+        // Message Broker
+        const messageBroker = DependencyInjector.inject<IMessageBroker>('IMessageBroker');
+        await messageBroker.connect(config.messageBroker);
+
+        // Close gracefully
+        const server = await app.getServer();
+        closedApplication({
+            server,
+            cache,
+            createConnection,
+            eventHandler,
+            messageBroker
         });
-        await app.build();
-        app.listen();
     }
     catch (error)
     {
         Logger.info('Error while connecting to the database', error);
         throw error;
     }
-
-    async function closeGracefully(signal: NodeJS.Signals)
-    {
-        app.close();
-        await createConnection.close(true);
-        cache.close();
-        await eventHandler.removeListeners();
-
-        process.kill(process.pid, signal);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    process.once('SIGINT', closeGracefully);
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    process.once('SIGTERM', closeGracefully);
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    process.once('SIGUSR2', closeGracefully);
 })();

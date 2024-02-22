@@ -1,12 +1,14 @@
-import EventHandler from '../../../Shared/Infrastructure/Events/EventHandler';
 import ISendEmailParams from '../Entities/ISendEmailParams';
 import EmailNotification from '../Entities/EmailNotification';
+import NotifierFactory from '../../Shared/NotifierFactory';
+import { FACTORIES } from '../../../Shared/DI/Injects';
 
 class SendEmailService
 {
     public static async handle(params: ISendEmailParams): Promise<void>
     {
-        const { type, args, event, name, files, data, cc, bcc, to, subject, external } = params;
+        const { type, args, name, files,
+            data, cc, bcc, to, subject, external, templatePathNameFile } = params;
 
         const emailNotification = new EmailNotification();
 
@@ -19,10 +21,15 @@ class SendEmailService
         emailNotification.attachedFiles = files ?? [];
         emailNotification.type = type;
         emailNotification.external = external ?? false;
+        args.templatePathNameFile = templatePathNameFile;
 
-        const eventHandler = EventHandler.getInstance();
+        const emailNotificator: any = NotifierFactory.create(FACTORIES.EmailStrategy);
 
-        await eventHandler.execute(event, { emailNotification, args });
+        emailNotificator.emailNotification = emailNotification;
+        emailNotificator.templatePathNameFile = args.templatePathNameFile;
+        emailNotificator.data = args;
+
+        await emailNotificator.send(emailNotificator.templatePathNameFile);
     }
 }
 

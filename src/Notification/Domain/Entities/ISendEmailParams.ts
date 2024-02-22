@@ -1,20 +1,20 @@
 import TypeNotificationEnum from '../Enum/TypeNotificationEnum';
 import IEmailNotificationData from './IEmailNotificationData';
-import IFileVersionDomain from '../../../File/Domain/Entities/IFileVersionDomain';
+import IFilesAttachments from './IFilesAttachments';
 
 interface ISendEmailParams
 {
     type: TypeNotificationEnum;
-    event: string;
     args: Record<string, any>
     name: string;
     subject?: string;
     data?: IEmailNotificationData;
-    files?: IFileVersionDomain[];
+    files?: IFilesAttachments[];
     to: string;
     cc?: string[];
     bcc?: string[];
     external?: boolean;
+    templatePathNameFile?: string;
 }
 
 export default ISendEmailParams;

@@ -1,32 +1,29 @@
-import { Query } from 'mongoose';
-import ICriteria from '../../../Shared/Presentation/Requests/ICriteria';
-import IPaginator from '../../../Shared/Infrastructure/Orm/IPaginator';
+import * as mongoose from 'mongoose';
+import { ICriteria } from '@digichanges/shared-experience';
 
-import IItemRepository from './IItemRepository';
+import IItemRepository from '../../Domain/Repositories/IItemRepository';
 import ItemFilter from '../../Presentation/Criterias/ItemFilter';
-import MongoosePaginator from '../../../Shared/Infrastructure/Orm/MongoosePaginator';
-import IItem from '../Schemas/ItemMongooseDocument';
 
-import BaseMongooseRepository from '../../../Shared/Infrastructure/Repositories/BaseMongooseRepository';
+import BaseMongooseRepository from '../../../Main/Infrastructure/Repositories/BaseMongooseRepository';
 import IItemDomain from '../../Domain/Entities/IItemDomain';
 import Item from '../../Domain/Entities/Item';
+import { ItemMongooseDocument } from '../Schemas/ItemMongoose';
 
-class ItemMongooseRepository extends BaseMongooseRepository<IItemDomain, IItem> implements IItemRepository
+class ItemMongooseRepository extends BaseMongooseRepository<IItemDomain, ItemMongooseDocument> implements IItemRepository
 {
     constructor()
     {
-        super(Item.name, ['createdBy', 'lastModifiedBy']);
+        super(Item.name);
     }
 
-    async list(criteria: ICriteria): Promise<IPaginator>
+    async list(criteria: ICriteria): Promise<any>
     {
-        const queryBuilder: Query<IItem[], IItem> = this.repository.find();
+        const queryBuilder: mongoose.Query<ItemMongooseDocument[], ItemMongooseDocument> = this.repository.find();
         const filter = criteria.getFilter();
 
         if (filter.has(ItemFilter.TYPE))
         {
             const type = filter.get(ItemFilter.TYPE);
-
             void queryBuilder.where(ItemFilter.TYPE).equals(type);
         }
 
@@ -38,9 +35,7 @@ class ItemMongooseRepository extends BaseMongooseRepository<IItemDomain, IItem> 
             void queryBuilder.where(ItemFilter.NAME).regex(rSearch);
         }
 
-        void queryBuilder.populate(this.populate);
-
-        return new MongoosePaginator(queryBuilder, criteria);
+        return this.pagination(queryBuilder, criteria);
     }
 }
 

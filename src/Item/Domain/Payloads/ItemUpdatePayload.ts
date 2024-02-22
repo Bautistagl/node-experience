@@ -1,6 +1,5 @@
-import IdPayload from '../../../Shared/Presentation/Requests/IdPayload';
+import { IdPayload } from '@digichanges/shared-experience';
 import ItemRepPayload from './ItemRepPayload';
-import IUserDomain from '../../../Auth/Domain/Entities/IUserDomain';
 
 interface ItemUpdatePayload extends IdPayload, ItemRepPayload {}
 

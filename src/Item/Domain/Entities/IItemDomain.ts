@@ -1,11 +1,6 @@
-import IBaseDomain from '../../../Shared/Domain/Entities/IBaseDomain';
-import IUserDomain from '../../../Auth/Domain/Entities/IUserDomain';
 import ItemRepPayload from '../Payloads/ItemRepPayload';
+import { IBaseExtendDomain } from '../../../Main/Domain/IBaseExtendDomain';
 
-interface IItemDomain extends IBaseDomain, ItemRepPayload
-{
-    createdBy: IUserDomain;
-    lastModifiedBy: IUserDomain;
-}
+interface IItemDomain extends IBaseExtendDomain, ItemRepPayload {}
 
 export default IItemDomain;

@@ -3,22 +3,35 @@ import { cleanEnv, str, port, bool, num, url } from 'envalid';
 export function validateEnv()
 {
     return cleanEnv(process.env, {
-        NODE_ENV: str(),
-        SERVER_PORT: port(),
+        NODE_ENV: str({ default: 'development' }),
 
-        DB_HOST: str(),
-        DB_USER: str(),
-        DB_DATABASE: str(),
-        DB_PASSWORD: str(),
-        DB_PORT: port(),
-        DB_DRIVER: str(),
-        SSL: bool(),
-        SSL_VALIDATE: bool(),
-        SSL_CA: str(),
-        REPLICA_SET: str(),
+        APP_DEFAULT: str(),
+        APP_PATH: str(),
+        APP_PORT: port(),
+        APP_SET_APP_PROXY: bool(),
+        APP_SET_COOKIE_SECURE: bool(),
+        APP_SET_COOKIE_SAME_SITE: str(),
+        APP_CORS: str(),
+
+        AUTH_API_KEY: str(),
+        AUTH_HOST: str(),
+        AUTH_SECRET: str(),
+        AUTH_AUTHORIZATION: bool(),
+
+        CACHE_HOST: str({ default: 'redis' }),
+        CACHE_PORT: port({ default: 6379 }),
+        CACHE_USER: str({ default: 'experience' }),
+        CACHE_PASSWORD: str({ default: '12345678' }),
+        CACHE_ENABLE: bool({ default: false }),
+
+        MESSAGE_BROKER_PROTOCOL: str(),
+        MESSAGE_BROKER_HOST: str(),
+        MESSAGE_BROKER_PORT: port(),
+        MESSAGE_BROKER_USER: str(),
+        MESSAGE_BROKER_PASSWORD: str(),
+
+        DB_URI: str(),
         DB_ORM_DEFAULT: str(),
-
-        DB_SYNCHRONIZE: bool(),
         DB_TYPE: str(),
 
         MINIO_HOST: str(),
@@ -37,8 +50,6 @@ export function validateEnv()
         JWT_EXPIRES: num(),
         JWT_ISS: str(),
         JWT_AUD: str(),
-        SET_COOKIE_SECURE: bool(),
-        SET_COOKIE_SAME_SITE: str(),
 
         SMTP_HOST: str(),
         SMTP_PORT: num(),
@@ -49,7 +60,6 @@ export function validateEnv()
         URL_API: url(),
         URL_WEB: url(),
 
-        AUTHORIZATION: bool(),
         PRODUCT_NAME: str(),
         ENCRYPTION_DEFAULT: str(),
         PUSH_PRIVATE_KEY: str(),

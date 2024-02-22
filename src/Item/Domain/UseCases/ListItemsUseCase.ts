@@ -1,8 +1,9 @@
-import ICriteria from '../../../Shared/Presentation/Requests/ICriteria';
-import IPaginator from '../../../Shared/Infrastructure/Orm/IPaginator';
-import { REPOSITORIES } from '../../../Config/Injects';
-import IItemRepository from '../../Infrastructure/Repositories/IItemRepository';
-import { getRequestContext } from '../../../Shared/Presentation/Shared/RequestContext';
+import { IPaginator, ICriteria } from '@digichanges/shared-experience';
+import { REPOSITORIES } from '../../../Shared/DI/Injects';
+import IItemRepository from '../Repositories/IItemRepository';
+import DependencyInjector from '../../../Shared/DI/DependencyInjector';
+import ValidatorSchema from '../../../Main/Domain/Shared/ValidatorSchema';
+import CriteriaSchemaValidation from '../../../Main/Domain/Validations/CriteriaSchemaValidation';
 
 class ListItemsUseCase
 {
@@ -10,12 +11,13 @@ class ListItemsUseCase
 
     constructor()
     {
-        const { container } = getRequestContext();
-        this.repository = container.resolve<IItemRepository>(REPOSITORIES.IItemRepository);
+        this.repository = DependencyInjector.inject<IItemRepository>(REPOSITORIES.IItemRepository);
     }
 
     async handle(payload: ICriteria): Promise<IPaginator>
     {
+        await ValidatorSchema.handle(CriteriaSchemaValidation, payload);
+
         return await this.repository.list(payload);
     }
 }

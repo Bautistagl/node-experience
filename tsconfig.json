@@ -1,5 +1,4 @@
 {
-  "compileOnSave": false,
   "reflection": true,
   "compilerOptions": {
     "composite": true,
@@ -14,12 +13,12 @@
     "useUnknownInCatchVariables": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
-    "target": "ESNext",
+    "target": "esnext",
     "lib": [
-      "ESNext",
-      "DOM"
+      "esnext",
+      "DOM",
+      "es2015.symbol"
     ],
-    "allowJs": true,
     "outDir": "./dist",
     "baseUrl": "./src",
     "module": "CommonJS",
@@ -27,7 +26,6 @@
     "strict": false,
     "types": [
       "node",
-      "reflect-metadata",
       "jest"
     ],
     "typeRoots": [
@@ -43,6 +41,6 @@
   "include": [
     "./src",
     "./typings/*",
-    ".eslintrc.json"
+    ".eslintrc"
   ]
 }

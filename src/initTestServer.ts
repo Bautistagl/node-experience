@@ -1,24 +1,22 @@
-import 'reflect-metadata';
-import './inversify.config';
-import container from './register';
+import dotenv from 'dotenv';
+dotenv.config({ path: './.env.test' });
+
+import { EventHandler, IApp } from '@digichanges/shared-experience';
+
+import container from './Shared/DI/container';
 
 import supertest from 'supertest';
 
-import DatabaseFactory from './Shared/Factories/DatabaseFactory';
-import EventHandler from './Shared/Infrastructure/Events/EventHandler';
-import { REPOSITORIES } from './Config/Injects';
-import TokenMongooseRepository from './Auth/Infrastructure/Repositories/TokenMongooseRepository';
-import TokenTypeORMRepository from './Auth/Infrastructure/Repositories/TokenTypeORMRepository';
-import { validateEnv } from './Config/validateEnv';
-import ITokenDomain from './Auth/Domain/Entities/ITokenDomain';
+import DatabaseFactory from './Main/Infrastructure/Factories/DatabaseFactory';
 import SeedFactory from './Shared/Factories/SeedFactory';
-import Locales from './Shared/Presentation/Shared/Locales';
 import MainConfig from './Config/MainConfig';
-import IApp from './Shared/Application/Http/IApp';
+import AppBootstrapFactory from './Main/Presentation/Factories/AppBootstrapFactory';
+import ICreateConnection from './Main/Infrastructure/Database/ICreateConnection';
+import IAuthRepository from './Auth/Domain/Repositories/IAuthRepository';
+import { REPOSITORIES } from './Shared/DI/Injects';
 import { Lifecycle } from 'tsyringe';
-import AppFactory from './Shared/Factories/AppFactory';
-import ICreateConnection from './Shared/Infrastructure/Database/ICreateConnection';
-import ITokenRepository from './Auth/Infrastructure/Repositories/ITokenRepository';
+import SendMessageEvent from './Notification/Domain/Events/SendMessageEvent';
+import AuthMockRepository from './Auth/Tests/AuthMockRepository';
 
 type TestServerData = {
     request: supertest.SuperAgentTest,
@@ -27,8 +25,6 @@ type TestServerData = {
 
 const initTestServer = async(): Promise<TestServerData> =>
 {
-    validateEnv();
-
     const config = MainConfig.getInstance().getConfig();
 
     const databaseFactory: DatabaseFactory = new DatabaseFactory();
@@ -39,34 +35,30 @@ const initTestServer = async(): Promise<TestServerData> =>
     await dbConnection.synchronize();
 
     const eventHandler = EventHandler.getInstance();
-    await eventHandler.setListeners();
-
-    void Locales.getInstance();
-
-    const defaultDb = config.dbConfig.default;
+    eventHandler.setEvent(new SendMessageEvent());
 
     // @ts-ignore
-    container._registry._registryMap.delete('ITokenRepository');
+    container._registry._registryMap.delete('IAuthRepository');
+    container.register<IAuthRepository>(REPOSITORIES.IAuthRepository, { useClass: AuthMockRepository }, { lifecycle: Lifecycle.Singleton });
 
-    container.register<ITokenRepository<ITokenDomain>>(REPOSITORIES.ITokenRepository, { useClass:
-        defaultDb === 'Mongoose' ? TokenMongooseRepository : TokenTypeORMRepository
-    }, { lifecycle: Lifecycle.Singleton });
+    const appBootstrap = AppBootstrapFactory.create(config.app.default);
 
-    const app: IApp = AppFactory.create(config.app.default);
-
-    app.initConfig({
-        serverPort: 8088
+    const app: IApp = await appBootstrap({
+        serverPort: 8088,
+        proxy: false,
+        env: 'test',
+        dbConfigDefault: 'Mongoose'
     });
-    await app.build();
 
-    const application = app.callback();
+    const application = await app.callback();
     const request: supertest.SuperAgentTest = supertest.agent(application);
 
     const seed = new SeedFactory();
     await seed.init();
 
+    await request.set({ Origin: config.url.urlWeb, Accept: 'application/json' });
+
     return { request, dbConnection };
 };
 
 export default initTestServer;
-

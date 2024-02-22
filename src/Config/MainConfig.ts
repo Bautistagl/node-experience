@@ -1,49 +1,30 @@
-import dotenv from 'dotenv';
-dotenv.config(); // Need before get config
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'path';
 import Config from 'config';
 import { TAlgorithm } from 'jwt-simple';
 import { validateEnv } from './validateEnv';
 
-type AppConfig = {
+export type AuthConfig = {
+    apiKey: string;
+    host: string;
+    secret: string;
+    authorization: boolean;
+};
+
+export type AppConfig = {
     default: string;
+    path: string;
+    setAppProxy: boolean;
+    setCookieSecure: boolean,
+    setCookieSameSite: boolean | 'None' | 'Lax' | 'Strict' | 'none' | 'lax' | 'strict',
+    serverPort: number,
 }
 
-type TypeORMConfig = {
-    type: string;
-    host: string;
-    port: number;
-    database: string;
-    username: string;
-    password: string;
-    synchronize: boolean;
-    migrationsRun: boolean;
-    logging: boolean;
-    entities: string[];
-    migrations: string[];
-    subscribers: string[];
-    cli: {
-        entitiesDir: string;
-        migrationsDir: string;
-        subscribersDir: string;
-    };
+export type MongooseConfig = {
+    uri: string;
 };
 
-type MongooseConfig = {
-    host: string;
-    port: number;
-    database: string;
-    username: string;
-    password: string;
-    driver: string;
-    ssl: boolean;
-    sslValidate: boolean;
-    sslCA: string | null;
-    replicaSet: string | null;
-};
-
-type MikroORMConfig = {
+export type MikroORMConfig = {
     dbName: string,
     host: string;
     port: number;
@@ -52,9 +33,16 @@ type MikroORMConfig = {
     password: string;
 };
 
+export type DbConfigType = {
+    Mongoose: MongooseConfig,
+    MikroORM: MikroORMConfig,
+    default: string
+}
+
 export type CacheConfig = {
     host: string;
     port: number;
+    user: string;
     password: string;
 };
 
@@ -77,7 +65,7 @@ export type JwtConfig = {
     aud: string;
 };
 
-type MailConfig = {
+export type MailConfig = {
     host: string;
     port: number;
     username: string;
@@ -88,54 +76,44 @@ type MailConfig = {
     templateDir: string;
 };
 
-type PushConfig = {
+export type PushConfig = {
     privateKey: string;
     publicKey: string;
 };
 
-type BCryptType = {
+export type BCryptType = {
     type: string;
     saltRounds: number;
     algorithm: TAlgorithm;
 };
 
-type ValidateSettingsType = {
+export type ValidateSettingsType = {
     password: {
         minLength: number;
         maxLength: number;
     };
 };
 
-type ApiWhiteType = {
-    methods: string[];
-    url: string;
-    urlRegExp?: RegExp;
-};
+export type MessageBrokerConfig = {
+    protocol: string,
+    hostname: string,
+    username: string,
+    password: string,
+    port: number
+}
 
-type ConfigType = {
+export type ConfigType = {
     env: string,
-    nodePath: string,
-    setCookieSecure: boolean,
-    setCookieSameSite: boolean | 'None' | 'Lax' | 'Strict',
-    serverPort: number,
-    auth: {
-        authorization: boolean
-    };
+    auth: AuthConfig;
     app: AppConfig,
-    dbConfig: {
-        TypeORM: TypeORMConfig,
-        Mongoose: MongooseConfig,
-        MikroORM: MikroORMConfig,
-        default: string
-    },
+    dbConfig: DbConfigType,
+    messageBroker: MessageBrokerConfig,
     cache: {
         redis: CacheConfig,
+        enable: boolean
     };
     filesystem: {
         minio: MinioConfig,
-        local: {
-            type: string
-        };
         default: string,
         expiry: number
     };
@@ -153,18 +131,17 @@ type ConfigType = {
     productInfo: {
         name: string
     };
-    validationSettings: ValidateSettingsType,
-    apiWhitelist: ApiWhiteType[],
-    executeCrons: boolean
+    executeCrons: boolean,
+    validationSettings: ValidateSettingsType
 }
 
-type DomainInfoConfig = {
+export type DomainInfoConfig = {
     name: string,
     fileInfra: string,
     handlers: string[]
 }
 
-type ConfigInfoType = {
+export type ConfigInfoType = {
     http: string[],
     orm: string[],
     domains: DomainInfoConfig[]
